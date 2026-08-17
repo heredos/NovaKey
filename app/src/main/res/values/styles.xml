@@ -1,4 +1,4 @@
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ NovaKey - An alternative touchscreen input method
   ~ Copyright (C) 2019  Viviano Cantu
   ~
@@ -20,25 +20,10 @@
 
 <resources>
 
+    <!-- Application theme: Material 3 with dynamic color (wallpaper based on
+         Android 12+, Material 3 defaults on older versions). -->
+    <style name="AppTheme" parent="Theme.Material3.DynamicColors.DayNight.NoActionBar" />
 
-    <!-- Application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
-
-        <!-- #616161 -->
-        <item name="colorAccent">@color/novakey_blue</item>
-        <item name="colorPrimary">@color/novakey_blue</item>
-        <item name="colorPrimaryDark">@color/novakey_dark_blue</item>
-        <item name="android:editTextStyle">@style/Widget.AppCompat.EditText</item>
-        <item name="android:editTextColor">#FFFFFF</item>
-        <item name="android:windowBackground">@color/novakey_blue</item>
-        <item name="android:colorBackground">@color/novakey_white</item>
-        <item name="android:colorForeground">@color/novakey_black</item>
-    </style>
-
-    <style name="TutorialTheme" parent="AppTheme">
-        <item name="colorAccent">#F0F0F0</item>
-    </style>
-
+    <style name="TutorialTheme" parent="AppTheme" />
 
 </resources>

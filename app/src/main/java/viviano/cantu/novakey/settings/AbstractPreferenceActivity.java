@@ -39,9 +39,6 @@ public abstract class AbstractPreferenceActivity extends AppCompatActivity {
         setContentView(getLayoutId());
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setBackgroundTintList(ColorStateList.valueOf(
-                getResources().getColor(R.color.novakey_blue)));
-        fab.setColorFilter(0xFFffffff);//icon color
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

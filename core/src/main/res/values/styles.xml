@@ -20,15 +20,7 @@
 
 <resources>
 
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:statusBarColor">@color/novakey_dark_blue</item>
-        <item name="android:colorPrimary">#177dc1</item>
-        <item name="colorPrimary">@color/novakey_blue</item>
-        <item name="colorPrimaryDark">@color/novakey_dark_blue</item>
-        <item name="colorAccent">@color/novakey_blue</item>
-        <item name="android:colorBackground">@color/novakey_white</item>
-        <item name="android:colorForeground">@color/novakey_black</item>
-        <item name="android:navigationBarColor">@color/novakey_dark_blue</item>
-        <item name="android:windowBackground">@color/novakey_white</item>
-    </style>
+    <!-- Theme applied when resolving the IME's Material 3 dynamic colors. -->
+    <style name="NovaKeyTheme" parent="Theme.Material3.DynamicColors.DayNight.NoActionBar" />
+
 </resources>

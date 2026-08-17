@@ -23,22 +23,30 @@ package viviano.cantu.novakey.core.model.loaders;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.util.TypedValue;
+import android.view.ContextThemeWrapper;
 
+import viviano.cantu.novakey.core.R;
 import viviano.cantu.novakey.core.model.Settings;
 import viviano.cantu.novakey.core.model.factories.ThemeFactory;
 import viviano.cantu.novakey.core.view.themes.MasterTheme;
 
 /**
- * Created by Viviano on 8/14/2016.
+ * Loads the {@link MasterTheme} used to draw the keyboard.
+ *
+ * <p>When the user has not customized the theme, the keyboard follows the
+ * system's Material 3 dynamic color palette (wallpaper based on Android 12+,
+ * Material 3 defaults on older versions).</p>
  */
 public class ThemeLoader implements Loader<MasterTheme> {
 
+    private final Context mContext;
     private final SharedPreferences mSharedPref;
 
 
     public ThemeLoader(Context context) {
+        mContext = context;
         mSharedPref = PreferenceManager.getDefaultSharedPreferences(context);
-        ;
     }
 
 
@@ -49,11 +57,36 @@ public class ThemeLoader implements Loader<MasterTheme> {
      */
     @Override
     public MasterTheme load() {
-        System.out.println("loading...");
-        System.out.println(mSharedPref.getString(
-                Settings.pref_theme, Settings.DEFAULT));
-        return ThemeFactory.themeFromString(mSharedPref.getString(
-                Settings.pref_theme, Settings.DEFAULT));
+        String themeString = mSharedPref.getString(Settings.pref_theme, Settings.DEFAULT);
+        MasterTheme theme = ThemeFactory.themeFromString(themeString);
+        if (themeString.equals(Settings.DEFAULT))
+            applyDynamicColors(theme);
+        return theme;
+    }
+
+
+    /**
+     * Applies the system's Material 3 dynamic color palette to the given theme.
+     *
+     * @param theme theme to color
+     */
+    private void applyDynamicColors(MasterTheme theme) {
+        Context themed = new ContextThemeWrapper(mContext, R.style.NovaKeyTheme);
+        int background = resolve(themed, com.google.android.material.R.attr.colorSurfaceContainerLow,
+                0xFF616161);
+        int lines = resolve(themed, com.google.android.material.R.attr.colorPrimary,
+                0xFFF5F5F5);
+        int text = resolve(themed, com.google.android.material.R.attr.colorOnSurface,
+                0xFFF5F5F5);
+        theme.setColors(background, lines, text);
+    }
+
+
+    private static int resolve(Context context, int attr, int fallback) {
+        TypedValue value = new TypedValue();
+        if (context.getTheme().resolveAttribute(attr, value, true))
+            return value.data;
+        return fallback;
     }
 
 
