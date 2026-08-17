@@ -20,6 +20,8 @@
 
 package viviano.cantu.novakey.core.actions;
 
+import android.view.inputmethod.ExtractedText;
+
 import viviano.cantu.novakey.core.controller.Controller;
 import viviano.cantu.novakey.core.NovaKeyService;
 import viviano.cantu.novakey.core.model.Model;
@@ -38,21 +40,52 @@ public class RenameSelectionAction implements Action<Void> {
 
 
     /**
-     * Called when the action is triggered
-     * Actual logic for the action goes here
-     *  @param ime
-     * @param control
-     * @param model
+     * Moves the caret, or grows/shrinks the selection while keeping the anchor
+     * fixed. In cursor mode 0 this acts like a left/right arrow key: any existing
+     * selection is dropped and the caret moved. In modes -1/1 only the start/end
+     * is moved and, when it crosses the anchor, the mode flips so the anchor
+     * stays in place.
      */
     @Override
     public Void trigger(NovaKeyService ime, Controller control, Model model) {
-        int ds = 0, de = 0;
-        if (model.getCursorMode() <= 0)
-            ds = mMoveRight ? 1 : -1;
-        if (model.getCursorMode() >= 0)
-            de = mMoveRight ? 1 : -1;
-        ime.moveSelection(ds, de);
+        ExtractedText et = ime.getExtractedText();
+        if (et == null || et.text == null)
+            return null;
 
+        int len = et.text.length();
+        int s = et.selectionStart, e = et.selectionEnd;
+        int d = mMoveRight ? 1 : -1;
+
+        switch (model.getCursorMode()) {
+            case 0://arrow key
+                int caret = s != e ? (d > 0 ? e : s) : s;
+                caret = clamp(caret + d, 0, len);
+                ime.setSelection(caret, caret);
+                break;
+            case -1://move start, anchor is end
+                s += d;
+                if (s > e) {
+                    ime.setSelection(e, s);
+                    model.setCursorMode(1);
+                } else {
+                    ime.setSelection(clamp(s, 0, len), clamp(e, 0, len));
+                }
+                break;
+            case 1://move end, anchor is start
+                e += d;
+                if (e < s) {
+                    ime.setSelection(e, s);
+                    model.setCursorMode(-1);
+                } else {
+                    ime.setSelection(clamp(s, 0, len), clamp(e, 0, len));
+                }
+                break;
+        }
         return null;
+    }
+
+
+    private int clamp(int value, int min, int max) {
+        return value < min ? min : value > max ? max : value;
     }
 }
