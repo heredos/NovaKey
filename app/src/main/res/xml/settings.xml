@@ -37,7 +37,7 @@
             android:summary="Vibrate when a line is crossed or a key is entered"
             android:key="pref_vibrate"
             android:defaultValue="true" />
-        <com.pavelsikun.seekbarpreference.SeekBarPreference
+        <viviano.cantu.novakey.settings.SeekBarPreference
             android:key="pref_vibrate_level"
             android:title="Vibrate Level"
             android:summary="Set the level of haptic feedback"
@@ -64,7 +64,7 @@
             android:summary="Automatically fix words"
             android:key="pref_auto_correct"
             android:defaultValue="true" />
-        <com.pavelsikun.seekbarpreference.SeekBarPreference
+        <viviano.cantu.novakey.settings.SeekBarPreference
             android:key="pref_long_press_time"
             android:title="Long Press Time"
             android:summary="Set the time it takes to long press"

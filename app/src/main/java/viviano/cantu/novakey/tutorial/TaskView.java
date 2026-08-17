@@ -161,13 +161,14 @@ public class TaskView extends View {
      */
     @Override
     public void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        setMeasuredDimension(widthMeasureSpec, (int) dimen * 7);
+        int width = MeasureSpec.getSize(widthMeasureSpec);
+        setMeasuredDimension(width, (int) dimen * 7);
         //first line for buttons
         //second line for space
         //last 5 for text
         float dp = getResources().getDimension(R.dimen.tut_btn_dimen);
         back = new TextButton("Back", dp, dimen);
-        forward = new TextButton("Next", getWidth() - dp, dimen);
+        forward = new TextButton("Next", width - dp, dimen);
         updateButtonStates();
     }
 

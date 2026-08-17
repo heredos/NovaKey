@@ -18,21 +18,24 @@
  * Any questions about the program or source may be directed to <strellastudios@gmail.com>
  */
 
-apply plugin: 'com.android.library'
+plugins {
+    id 'com.android.library'
+}
 
 android {
-    compileSdkVersion 28
-
-
+    namespace "viviano.cantu.novakey.core"
+    compileSdk 35
 
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 28
+        minSdk 21
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
+        buildConfigField("int", "VERSION_CODE", "1")
+        buildConfigField("String", "VERSION_NAME", "\"1.0\"")
     }
 
     buildTypes {
@@ -46,13 +49,21 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
         sourceCompatibility JavaVersion.VERSION_1_8
     }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'com.android.support:appcompat-v7:28.0.0'
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
 }

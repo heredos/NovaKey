@@ -18,5 +18,4 @@
   ~ Any questions about the program or source may be directed to <strellastudios@gmail.com>
   -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="viviano.cantu.novakey.core" />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" />
