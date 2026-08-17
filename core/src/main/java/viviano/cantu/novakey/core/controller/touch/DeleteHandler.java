@@ -97,7 +97,7 @@ public class DeleteHandler extends RotatingHandler {
                     mStack.add(str);
             } else {//add
                 if (mStack.size() >= 1)
-                    controller.fire(new InputAction(mStack.pop()));
+                    controller.fire(new InputAction(mStack.pop(), false));
                 if (mStack.size() == 0)
                     mBackspacing = false;
             }
