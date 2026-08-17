@@ -124,12 +124,17 @@ public class Clipboard {
                         copy, new NoAction()),
 
                 new OnUpMenu.Entry(Icons.get("select_all"),
-                        select_all, new SetOverlayAction(selectAll)),
+                        select_all, (ime, control, model) -> {
+                    control.fire(new SetOverlayAction(selectAll));
+                    control.setHandler(selectAll.getHandler());
+                    return null;
+                }),
 
                 new OnUpMenu.Entry(Icons.get("content_paste"),
                         paste, (ime, control, model) -> {
                     InfiniteMenu clipboard = createClipboard();
                     control.fire(new SetOverlayAction(clipboard));
+                    control.setHandler(clipboard.getHandler());
                     return null;
                 }),
 

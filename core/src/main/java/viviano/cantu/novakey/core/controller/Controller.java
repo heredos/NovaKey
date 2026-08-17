@@ -128,6 +128,17 @@ public class Controller implements Gun, View.OnTouchListener {
 
 
     /**
+     * Sets the current touch handler. Used to hand off control
+     * to a new overlay's handler when it is opened mid-gesture
+     *
+     * @param handler handler to route touch events to
+     */
+    public void setHandler(TouchHandler handler) {
+        mHandler = handler;
+    }
+
+
+    /**
      * Triggers action and update the view
      *
      * @param action action to fire

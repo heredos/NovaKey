@@ -117,6 +117,24 @@ public class OnUpMenu implements OverlayElement, Menu {
     }
 
 
+    /**
+     * @return this menu's touch handler, used to hand off control
+     * when the menu is opened mid-gesture
+     */
+    public TouchHandler getHandler() {
+        return mHandler;
+    }
+
+
+    /**
+     * Resets the menu's internal state so it can be safely
+     * reused across multiple openings
+     */
+    public void reset() {
+        ((Handler) mHandler).reset();
+    }
+
+
     private class Handler extends AreaCrossedHandler {
 
         private CountDownTimer mTimer;
@@ -133,6 +151,8 @@ public class OnUpMenu implements OverlayElement, Menu {
 
                 @Override
                 public void onFinish() {
+                    if (mArea < 1 || mArea > mEntries.size())
+                        return;
                     Menu.Entry entry = mEntries.get(mArea - 1);
                     if (entry instanceof OnUpMenu.Entry)
                         control.fire(((OnUpMenu.Entry) entry).longPress);
@@ -144,6 +164,12 @@ public class OnUpMenu implements OverlayElement, Menu {
         private void cancelTimer() {
             if (mTimer != null)
                 mTimer.cancel();
+        }
+
+
+        private void reset() {
+            cancelTimer();
+            mArea = 0;
         }
 
 
@@ -172,9 +198,10 @@ public class OnUpMenu implements OverlayElement, Menu {
          */
         @Override
         protected boolean onCross(CrossEvent event, Controller controller) {
-            mTimer.cancel();
-            mTimer.start();
             mArea = event.newArea;
+            cancelTimer();
+            if (mArea >= 1 && mArea <= mEntries.size())
+                startTimer(controller);
             return true;
         }
 
@@ -188,8 +215,9 @@ public class OnUpMenu implements OverlayElement, Menu {
          */
         @Override
         protected boolean onUp(Controller controller) {
-            mTimer.cancel();
-            controller.fire(mEntries.get(mArea - 1).action);
+            cancelTimer();
+            if (mArea >= 1 && mArea <= mEntries.size())
+                controller.fire(mEntries.get(mArea - 1).action);
             controller.fire(new SetOverlayAction(controller.getModel().getKeyboard()));
             return false;
         }

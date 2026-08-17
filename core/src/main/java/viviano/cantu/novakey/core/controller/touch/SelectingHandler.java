@@ -20,11 +20,16 @@
 
 package viviano.cantu.novakey.core.controller.touch;
 
+import android.os.CountDownTimer;
+
+import viviano.cantu.novakey.core.Clipboard;
 import viviano.cantu.novakey.core.controller.Controller;
 import viviano.cantu.novakey.core.actions.Action;
 import viviano.cantu.novakey.core.actions.RenameSelectionAction;
 import viviano.cantu.novakey.core.actions.SetOverlayAction;
 import viviano.cantu.novakey.core.actions.ToggleCursorModeAction;
+import viviano.cantu.novakey.core.actions.VibrateAction;
+import viviano.cantu.novakey.core.model.Settings;
 
 /**
  * Created by Viviano on 6/15/2016.
@@ -32,6 +37,9 @@ import viviano.cantu.novakey.core.actions.ToggleCursorModeAction;
 public class SelectingHandler extends RotatingHandler {
 
     private final Action mRight, mLeft;
+
+    private CountDownTimer mTimer;
+    private boolean mMenuOpened;
 
 
     public SelectingHandler() {
@@ -51,9 +59,36 @@ public class SelectingHandler extends RotatingHandler {
     @Override
     protected boolean onCenterCross(boolean entered,
                                     Controller controller) {
-        if (entered)
-            controller.fire(new ToggleCursorModeAction());
+        if (entered) {
+            cancelTimer();
+            mMenuOpened = false;
+            mTimer = new CountDownTimer(Settings.longPressTime, Settings.longPressTime) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                }
+
+
+                @Override
+                public void onFinish() {
+                    controller.fire(new VibrateAction(Settings.vibrateLevel));
+                    Clipboard.MENU.reset();
+                    controller.fire(new SetOverlayAction(Clipboard.MENU));
+                    controller.setHandler(Clipboard.MENU.getHandler());
+                    mMenuOpened = true;
+                }
+            }.start();
+        } else {
+            cancelTimer();
+            if (!mMenuOpened)
+                controller.fire(new ToggleCursorModeAction());
+        }
         return true;
+    }
+
+
+    private void cancelTimer() {
+        if (mTimer != null)
+            mTimer.cancel();
     }
 
 
@@ -99,7 +134,9 @@ public class SelectingHandler extends RotatingHandler {
      */
     @Override
     protected boolean onUp(Controller controller) {
-        controller.fire(new SetOverlayAction(controller.getModel().getKeyboard()));
+        cancelTimer();
+        if (!mMenuOpened)
+            controller.fire(new SetOverlayAction(controller.getModel().getKeyboard()));
         return false;
     }
 }

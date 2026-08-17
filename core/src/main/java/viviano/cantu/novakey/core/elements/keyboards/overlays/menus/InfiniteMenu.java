@@ -184,6 +184,15 @@ public class InfiniteMenu implements OverlayElement, Menu {
 
 
     /**
+     * @return this menu's touch handler, used to hand off control
+     * when the menu is opened mid-gesture
+     */
+    public TouchHandler getHandler() {
+        return mHandler;
+    }
+
+
+    /**
      * This will be the
      */
     private class Handler extends RotatingHandler {
