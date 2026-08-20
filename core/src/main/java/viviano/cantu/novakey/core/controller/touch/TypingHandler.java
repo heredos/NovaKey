@@ -32,6 +32,7 @@ import viviano.cantu.novakey.core.actions.RenameSelectionAction;
 import viviano.cantu.novakey.core.actions.SetOverlayAction;
 import viviano.cantu.novakey.core.actions.VibrateAction;
 import viviano.cantu.novakey.core.actions.input.DeleteAction;
+import viviano.cantu.novakey.core.actions.input.InputAction;
 import viviano.cantu.novakey.core.elements.keyboards.Key;
 import viviano.cantu.novakey.core.elements.keyboards.Keyboard;
 import viviano.cantu.novakey.core.elements.keyboards.overlays.CursorOverlay;
@@ -52,6 +53,9 @@ public class TypingHandler extends AreaCrossedHandler {
     private Key mRepeatingKey;
     public boolean mRepeating = false;
     private int mArea1, mArea2;
+
+    private CountDownTimer mNewlineTimer;
+    private boolean mNewlineTriggered = false;
 
 
     public TypingHandler(Keyboard keyboard) {
@@ -95,6 +99,14 @@ public class TypingHandler extends AreaCrossedHandler {
     }
 
 
+    private void cancelNewlineTimer() {
+        if (mNewlineTimer != null) {
+            mNewlineTimer.cancel();
+            mNewlineTimer = null;
+        }
+    }
+
+
     /**
      * Override this to specify onDown behaviour
      *
@@ -108,6 +120,8 @@ public class TypingHandler extends AreaCrossedHandler {
                              Controller controller) {
         mAreas.clear();
         mRepeating = false;
+        mNewlineTriggered = false;
+        cancelNewlineTimer();
         if (area != -1)
             mAreas.add(area);
         start(controller);
@@ -128,9 +142,37 @@ public class TypingHandler extends AreaCrossedHandler {
         if (mAreas.size() > 0 && event.newArea == mAreas.get(mAreas.size() - 1) ||
                 event.newArea == -1)
             return true;
+        if (event.newArea != 3)
+            cancelNewlineTimer();
         controller.fire(new VibrateAction(Settings.vibrateLevel));
         cancel();
         mAreas.add(event.newArea);
+
+        // Swipe-down hold-to-newline: if finger reaches area 3 from the center
+        // via a swipe-down path, start a timer to insert newline on hold.
+        if (event.newArea == 3 && mAreas.size() >= 2) {
+            int last = mAreas.size() - 1;
+            if (mAreas.get(last - 1) == 0 &&
+                    mAreas.get(0) != 3 && mAreas.get(0) != 0) {
+                cancelNewlineTimer();
+                final Controller ctrl = controller;
+                mNewlineTimer = new CountDownTimer(
+                        Settings.longPressTime, Settings.longPressTime) {
+                    @Override
+                    public void onTick(long millisUntilFinished) {
+                    }
+
+                    @Override
+                    public void onFinish() {
+                        mNewlineTriggered = true;
+                        ctrl.fire(new InputAction("\n", false));
+                    }
+                };
+                mNewlineTimer.start();
+                return true;
+            }
+        }
+
         //TODO: validate
         //no need to start long press for non-keys
         if (mAreas.size() <= 3 && !mRepeating)
@@ -193,11 +235,13 @@ public class TypingHandler extends AreaCrossedHandler {
     @Override
     protected boolean onUp(Controller controller) {
         cancel();
-        if (!mRepeating) {
+        cancelNewlineTimer();
+        if (!mRepeating && !mNewlineTriggered) {
             controller.fire(mKeyboard.getKey(mAreas));
         }
         mAreas.clear();
         mRepeating = false;
+        mNewlineTriggered = false;
         return false;
     }
 
