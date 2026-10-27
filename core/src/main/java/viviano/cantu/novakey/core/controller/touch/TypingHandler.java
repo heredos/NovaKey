@@ -83,8 +83,12 @@ public class TypingHandler extends AreaCrossedHandler {
                 if (a instanceof Key) {
                     InfiniteMenu newMenu = ((Key) a).getHiddenKeys(
                             controller.getModel().getShiftState());
-                    if (newMenu != null)
+                    if (newMenu != null) {
                         controller.fire(new SetOverlayAction(newMenu));
+                        //hand the ongoing gesture to the menu so it tracks
+                        //this long press' position instead of stale state
+                        controller.setHandler(newMenu.getHandler());
+                    }
                 }
             }
         };

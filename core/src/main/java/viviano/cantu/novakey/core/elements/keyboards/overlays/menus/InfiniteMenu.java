@@ -198,6 +198,42 @@ public class InfiniteMenu implements OverlayElement, Menu {
     private class Handler extends RotatingHandler {
 
         /**
+         * Seeds the menu with the position of the long press that
+         * opened it: the entries are laid out from this origin and
+         * mIndex = 0 is the entry the event fired on
+         *
+         * @param x       current finger x position
+         * @param y       current finger y position
+         * @param control controller used for context
+         */
+        @Override
+        public void begin(float x, float y, Controller control) {
+            super.begin(x, y, control);
+            fingX = x;
+            fingY = y;
+            mIndex = 0;
+        }
+
+
+        /**
+         * Called when the user enters a gesture normally,
+         * resets state left over from a previous opening
+         *
+         * @param x          current x position
+         * @param y          current y position
+         * @param area       current area
+         * @param controller view being called on
+         */
+        @Override
+        protected boolean onDown(float x, float y, int area, Controller controller) {
+            fingX = x;
+            fingY = y;
+            mIndex = 0;
+            return true;
+        }
+
+
+        /**
          * Called when the user enters or exits the inner circle.
          * Call unrelated to onMove()
          *

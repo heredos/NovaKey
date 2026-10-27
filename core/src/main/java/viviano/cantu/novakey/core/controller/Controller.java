@@ -58,6 +58,7 @@ public class Controller implements Gun, View.OnTouchListener {
     //touch
     private TouchHandler mHandler;//current handler
     private CustomTimer mDoublePress;
+    private float mLastX, mLastY;//last known finger position
 
 
     /**
@@ -129,12 +130,17 @@ public class Controller implements Gun, View.OnTouchListener {
 
     /**
      * Sets the current touch handler. Used to hand off control
-     * to a new overlay's handler when it is opened mid-gesture
+     * to a new overlay's handler when it is opened mid-gesture.
+     * The new handler is initialized with the last known finger
+     * position so it never sees a gesture it didn't witness the
+     * start of as an inconsistent state
      *
      * @param handler handler to route touch events to
      */
     public void setHandler(TouchHandler handler) {
         mHandler = handler;
+        if (handler != null)
+            handler.begin(mLastX, mLastY, this);
     }
 
 
@@ -156,6 +162,9 @@ public class Controller implements Gun, View.OnTouchListener {
 
     @Override
     public boolean onTouch(View view, MotionEvent event) {
+        mLastX = event.getX(0);
+        mLastY = event.getY(0);
+
         switch (event.getAction() & MotionEvent.ACTION_MASK) {
             //for multitouch
             case MotionEvent.ACTION_POINTER_DOWN:

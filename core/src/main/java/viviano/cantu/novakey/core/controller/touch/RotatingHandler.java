@@ -30,9 +30,29 @@ import viviano.cantu.novakey.core.elements.MainElement;
  */
 public abstract class RotatingHandler implements TouchHandler {
 
-    private float currX, currY;
-    private int currArea, prevArea;
-    private int currSector = -1, prevSector = -1;
+    protected float currX, currY;
+    protected int currArea, prevArea;
+    protected int currSector = -1, prevSector = -1;
+
+
+    /**
+     * Freezes area & sector tracking to the given position so a
+     * mid-gesture hand off neither emits a phantom center cross nor
+     * swallows the first genuine rotation (the prevSector == -1 guard)
+     *
+     * @param x       current finger x position
+     * @param y       current finger y position
+     * @param control controller used for context
+     */
+    @Override
+    public void begin(float x, float y, Controller control) {
+        currX = x;
+        currY = y;
+        currArea = MainElement.getArea(currX, currY, control.getModel());
+        prevArea = currArea;
+        currSector = MainElement.getSector(currX, currY, control.getModel());
+        prevSector = currSector;
+    }
 
 
     /**
@@ -66,9 +86,19 @@ public abstract class RotatingHandler implements TouchHandler {
                         result = result & onCenterCross(false, control);
                 }
                 prevArea = currArea;
-                if (currSector != prevSector && prevSector != -1) {//if not initial handling
-                    boolean clockwise = (prevSector - 1) == (currSector % 5);
-                    result = result & onRotate(clockwise, currArea == 0, control);
+                if (currSector != prevSector && prevSector != -1 &&
+                        currSector >= 1 && currSector <= 5 &&
+                        prevSector >= 1 && prevSector <= 5) {//if not initial handling
+                    //shortest signed delta over the 5 cycle, in [-2, 2];
+                    //a fast swipe landing several sectors over counts every step
+                    int delta = currSector - prevSector;
+                    if (delta > 2)
+                        delta -= 5;
+                    if (delta < -2)
+                        delta += 5;
+                    boolean clockwise = delta < 0;
+                    for (int i = 0; i < Math.abs(delta); i++)
+                        result = result & onRotate(clockwise, currArea == 0, control);
                 }
                 prevSector = currSector;
                 break;

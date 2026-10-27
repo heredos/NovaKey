@@ -51,6 +51,15 @@ public class PunctuationButton extends Button {
      */
     @Override
     protected Action onLongPressAction() {
-        return new SetOverlayAction(InfiniteMenu.getHiddenKeys('.'));
+        final InfiniteMenu menu = InfiniteMenu.getHiddenKeys('.');
+        if (menu == null)
+            return null;
+        //opens the menu AND hands the ongoing gesture to it, so the menu
+        //is laid out from this long press' position (section of the button)
+        return (ime, control, model) -> {
+            control.fire(new SetOverlayAction(menu));
+            control.setHandler(menu.getHandler());
+            return null;
+        };
     }
 }

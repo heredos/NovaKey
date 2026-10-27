@@ -30,8 +30,25 @@ import viviano.cantu.novakey.core.elements.MainElement;
  */
 public abstract class AreaCrossedHandler implements TouchHandler {
 
-    private float currX, currY;
-    private int currArea, prevArea;
+    protected float currX, currY;
+    protected int currArea, prevArea;
+
+
+    /**
+     * Freezes area tracking to the given position so a mid-gesture
+     * hand off doesn't emit a phantom cross on the first move event
+     *
+     * @param x       current finger x position
+     * @param y       current finger y position
+     * @param control controller used for context
+     */
+    @Override
+    public void begin(float x, float y, Controller control) {
+        currX = x;
+        currY = y;
+        currArea = MainElement.getArea(currX, currY, control.getModel());
+        prevArea = currArea;
+    }
 
 
     /**

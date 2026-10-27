@@ -141,6 +141,26 @@ public class OnUpMenu implements OverlayElement, Menu {
         private int mArea = 0;
 
 
+        /**
+         * Seeds the menu with the position of the event that opened
+         * it: no phantom cross (and therefore no long press timer)
+         * is created on the first move, and an area the finger is
+         * already in counts as the origin. No timer is started here;
+         * it only starts when the finger genuinely enters an area
+         *
+         * @param x       current finger x position
+         * @param y       current finger y position
+         * @param control controller used for context
+         */
+        @Override
+        public void begin(float x, float y, Controller control) {
+            super.begin(x, y, control);
+            fingerX = x;
+            fingerY = y;
+            mArea = currArea >= 1 && currArea <= mEntries.size() ? currArea : 0;
+        }
+
+
         private void startTimer(Controller control) {
             mTimer = new CountDownTimer(Settings.longPressTime, Settings.longPressTime) {
                 @Override
@@ -170,6 +190,8 @@ public class OnUpMenu implements OverlayElement, Menu {
         private void reset() {
             cancelTimer();
             mArea = 0;
+            fingerX = 0;
+            fingerY = 0;
         }
 
 

@@ -30,6 +30,24 @@ import viviano.cantu.novakey.core.controller.Controller;
 public interface TouchHandler {
 
     /**
+     * Initializes this handler when it is handed control mid-gesture,
+     * i.e. without having received the gesture's ACTION_DOWN.
+     * <p>
+     * Implementations must freeze their area/sector tracking to the
+     * given position so that the first move event after the hand off
+     * does not produce a phantom cross, center cross, rotation or
+     * long press timer. The position also serves as the origin ("index 0")
+     * for menus opened by a long press.
+     *
+     * @param x       current finger x position
+     * @param y       current finger y position
+     * @param control controller used for context
+     */
+    default void begin(float x, float y, Controller control) {
+    }
+
+
+    /**
      * Handles the logic given a touch event and
      * a view
      *
