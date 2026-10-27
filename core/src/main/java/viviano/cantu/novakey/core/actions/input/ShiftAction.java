@@ -58,8 +58,15 @@ public class ShiftAction implements Action<Void> {
         int s = 0, e = 0;
         if (shiftText) {
             ExtractedText et = ime.getExtractedText();
-            s = et.selectionStart;
-            e = et.selectionEnd;
+            if (et != null && et.text != null) {
+                s = et.selectionStart;
+                e = et.selectionEnd;
+            } else {
+                // Editor doesn't support extraction: fall back to the
+                // selection tracked from onUpdateSelection callbacks
+                s = state.getSelectionStart();
+                e = state.getSelectionEnd();
+            }
         }
 
         switch (model.getKeyboardCode()) {

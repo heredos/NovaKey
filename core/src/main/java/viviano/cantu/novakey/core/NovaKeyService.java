@@ -56,7 +56,9 @@ public abstract class NovaKeyService extends InputMethodService {
     /**
      * This method is expensive, avoid it
      *
-     * @return extracted text object, which receives updates
+     * @return extracted text object, which receives updates,
+     * or null when unavailable (no connection or the editor
+     * doesn't support text extraction)
      */
     public abstract ExtractedText getExtractedText();
 

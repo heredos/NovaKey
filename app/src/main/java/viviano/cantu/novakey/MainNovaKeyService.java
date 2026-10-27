@@ -317,10 +317,15 @@ public class MainNovaKeyService extends NovaKeyService {
     /**
      * This method is expensive, avoid it
      *
-     * @return extracted text object, which receives updates
+     * @return extracted text object, which receives updates,
+     * or null when unavailable (no connection or the editor
+     * doesn't support text extraction)
      */
     public ExtractedText getExtractedText() {
-        return getCurrentInputConnection().getExtractedText(new ExtractedTextRequest(), 0);
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null)
+            return null;
+        return ic.getExtractedText(new ExtractedTextRequest(), 0);
     }
 
 
@@ -330,7 +335,10 @@ public class MainNovaKeyService extends NovaKeyService {
      * @return text between the selection start and end
      */
     public String getSelectedText() {
-        CharSequence cs = getCurrentInputConnection().getSelectedText(0);
+        InputConnection ic = getCurrentInputConnection();
+        if (ic == null)
+            return "";
+        CharSequence cs = ic.getSelectedText(0);
         if (cs != null)
             return cs.toString();
         return "";
@@ -362,6 +370,18 @@ public class MainNovaKeyService extends NovaKeyService {
      */
     public void moveSelection(int deltaStart, int deltaEnd) {
         ExtractedText et = getExtractedText();
+        if (et == null) {
+            // Editor doesn't support extraction: arrow key events move the
+            // caret without needing the text. Both ends of the selection
+            // can't be moved independently this way, so best effort is a
+            // single caret move (all current call sites pass equal deltas)
+            int delta = deltaStart == deltaEnd ? deltaStart : deltaEnd;
+            int keyCode = delta < 0
+                    ? KeyEvent.KEYCODE_DPAD_LEFT : KeyEvent.KEYCODE_DPAD_RIGHT;
+            for (int i = 0; i < Math.abs(delta); i++)
+                sendDownUpKeyEvents(keyCode);
+            return;
+        }
         int s = et.selectionStart + deltaStart, e = et.selectionEnd + deltaEnd;
         s = s < 0 ? 0 : s;
         e = e < 0 ? 0 : e;

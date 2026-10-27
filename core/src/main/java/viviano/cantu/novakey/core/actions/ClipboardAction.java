@@ -77,13 +77,24 @@ public class ClipboardAction implements Action<String> {
         }
         // select all
         else if (mAction == Clipboard.SELECT_ALL) {
+            // extraction is optional: without it the total length of the
+            // text is unknown, so select all can't be performed
+            if (eText == null || eText.text == null)
+                return null;
             int end = eText.text.length();
             ime.setSelection(0, end);
         }
         // deselect all
         else if (mAction == Clipboard.DESELECT_ALL) {
-            int i = control.getModel().getCursorMode() <= 0
-                    ? eText.selectionEnd : eText.selectionStart;
+            boolean collapseToEnd = control.getModel().getCursorMode() <= 0;
+            int i;
+            if (eText != null) {
+                i = collapseToEnd ? eText.selectionEnd : eText.selectionStart;
+            } else {
+                // Editor doesn't support extraction: fall back to the
+                // selection tracked from onUpdateSelection callbacks
+                i = collapseToEnd ? state.getSelectionEnd() : state.getSelectionStart();
+            }
             ime.setSelection(i, i);
         }
         return null;

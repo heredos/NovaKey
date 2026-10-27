@@ -21,7 +21,6 @@
 package viviano.cantu.novakey.core.actions.input;
 
 import android.view.KeyEvent;
-import android.view.inputmethod.ExtractedText;
 import android.view.inputmethod.InputConnection;
 
 import viviano.cantu.novakey.core.controller.Controller;
@@ -38,6 +37,13 @@ import viviano.cantu.novakey.core.utils.Predicate;
  * Returns the text that is deleted as a String
  */
 public class DeleteAction implements Action<String> {
+
+    /**
+     * Max amount of characters queried around the cursor when computing
+     * what to delete. Keeps the query cheap on editors holding huge
+     * buffers (like terminal emulators with scrollback)
+     */
+    private static final int TEXT_WINDOW = 4096;
 
     private final boolean mForward, mFast;
 
@@ -68,8 +74,9 @@ public class DeleteAction implements Action<String> {
     @Override
     public String trigger(NovaKeyService ime, Controller control, Model model) {
         InputState is = model.getInputState();
+        boolean selectionBranch = is.getSelectionStart() != is.getSelectionEnd();
         // If not a single cursor then perform a delete key action
-        if (is.getSelectionStart() != is.getSelectionEnd()) {
+        if (selectionBranch) {
             String selected = ime.getSelectedText();
             ime.commitComposingText();
 
@@ -107,10 +114,16 @@ public class DeleteAction implements Action<String> {
             return "";
 
         StringBuilder sb = new StringBuilder();
-        ExtractedText et = ime.getExtractedText();
-        String text = (String) et.text;
-        String left = text.substring(0, et.selectionStart);
-        String right = text.substring(et.selectionEnd);
+        // Cursor-relative queries are supported by virtually every editor,
+        // unlike getExtractedText() which is optional and returns null on
+        // editors that don't support text extraction (e.g. terminals)
+        CharSequence leftQ = ic.getTextBeforeCursor(TEXT_WINDOW, 0);
+        CharSequence rightQ = ic.getTextAfterCursor(TEXT_WINDOW, 0);
+
+        // null simply counts as empty: an empty side of the cursor yields a
+        // delete count of 0, which is handled by the blind fallback below
+        String left = leftQ == null ? "" : leftQ.toString();
+        String right = rightQ == null ? "" : rightQ.toString();
 
         char curr = 0;
         if (backspace) {
@@ -148,11 +161,23 @@ public class DeleteAction implements Action<String> {
 
         ic.finishComposingText();
         model.getInputState().clearComposingText();
-        if (sb.length() >= 1) {
-            if (backspace)
-                ic.deleteSurroundingText(sb.length(), 0);
-            else
-                ic.deleteSurroundingText(0, sb.length());
+        // A count of 0 means the query for this direction came back empty.
+        // Either the cursor truly is at the document edge (where deleting one
+        // char is a harmless no-op in the editor) or the editor doesn't
+        // implement the queries at all (e.g. Termux answers ""). Blindly
+        // delete a single character so deletion still works in the latter case
+        boolean blind = sb.length() == 0;
+        int count = blind ? 1 : sb.length();
+        if (backspace) {
+            // deleteSurroundingText with a left length is implemented by
+            // virtually every editor (Termux translates it into DEL key events)
+            ic.deleteSurroundingText(count, 0);
+        } else {
+            // Forward delete: editors like Termux ignore the rightLength
+            // argument of deleteSurroundingText entirely, so use forward-del
+            // key events instead, which both Termux and regular editors handle
+            for (int i = 0; i < count; i++)
+                ime.sendDownUpKeyEvents(KeyEvent.KEYCODE_FORWARD_DEL);
         }
         control.fire(new UpdateShiftAction());
         return sb.toString();

@@ -20,6 +20,7 @@
 
 package viviano.cantu.novakey.core.actions;
 
+import android.view.KeyEvent;
 import android.view.inputmethod.ExtractedText;
 
 import viviano.cantu.novakey.core.controller.Controller;
@@ -48,13 +49,23 @@ public class RenameSelectionAction implements Action<Void> {
      */
     @Override
     public Void trigger(NovaKeyService ime, Controller control, Model model) {
+        int d = mMoveRight ? 1 : -1;
         ExtractedText et = ime.getExtractedText();
-        if (et == null || et.text == null)
+
+        if (et == null || et.text == null) {
+            // Editor without text extraction (e.g. Termux, whose inherited
+            // BaseInputConnection also silently ignores setSelection): key
+            // events are the only channel that reaches the editor, so move
+            // the caret with arrow keys. The selection bracket modes (-1/1)
+            // aren't supported there and degrade to a plain caret move
+            int keyCode = d < 0
+                    ? KeyEvent.KEYCODE_DPAD_LEFT : KeyEvent.KEYCODE_DPAD_RIGHT;
+            ime.sendDownUpKeyEvents(keyCode);
             return null;
+        }
 
         int len = et.text.length();
         int s = et.selectionStart, e = et.selectionEnd;
-        int d = mMoveRight ? 1 : -1;
 
         switch (model.getCursorMode()) {
             case 0://arrow key
