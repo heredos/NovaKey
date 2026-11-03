@@ -33,6 +33,8 @@ import viviano.cantu.novakey.core.actions.SetOverlayAction;
 import viviano.cantu.novakey.core.actions.VibrateAction;
 import viviano.cantu.novakey.core.actions.input.DeleteAction;
 import viviano.cantu.novakey.core.actions.input.InputAction;
+import viviano.cantu.novakey.core.actions.input.SpaceAction;
+import viviano.cantu.novakey.core.actions.input.TabAction;
 import viviano.cantu.novakey.core.elements.keyboards.Key;
 import viviano.cantu.novakey.core.elements.keyboards.Keyboard;
 import viviano.cantu.novakey.core.elements.keyboards.overlays.CursorOverlay;
@@ -56,6 +58,9 @@ public class TypingHandler extends AreaCrossedHandler {
 
     private CountDownTimer mNewlineTimer;
     private boolean mNewlineTriggered = false;
+
+    private CountDownTimer mTabTimer;
+    private boolean mTabTriggered = false;
 
 
     public TypingHandler(Keyboard keyboard) {
@@ -84,6 +89,7 @@ public class TypingHandler extends AreaCrossedHandler {
                     InfiniteMenu newMenu = ((Key) a).getHiddenKeys(
                             controller.getModel().getShiftState());
                     if (newMenu != null) {
+                        controller.fire(new VibrateAction(Settings.vibrateLevel));
                         controller.fire(new SetOverlayAction(newMenu));
                         //hand the ongoing gesture to the menu so it tracks
                         //this long press' position instead of stale state
@@ -111,6 +117,47 @@ public class TypingHandler extends AreaCrossedHandler {
     }
 
 
+    private void cancelTabTimer() {
+        if (mTabTimer != null) {
+            mTabTimer.cancel();
+            mTabTimer = null;
+        }
+    }
+
+
+    /**
+     * Arms the hold-to-tab timer for as long as the areas crossed so
+     * far form the space gesture (swipe right), cancelling it otherwise.
+     * Recomputed on every cross so any deviation that stops the path
+     * being a space gesture drops the pending tab. Runs on its own
+     * timer instead of the shared long press timer because that one is
+     * never re-armed past three areas, and it only handles keys.
+     *
+     * @param controller controller used to fire the tab when it elapses
+     */
+    private void updateTabTimer(Controller controller) {
+        cancelTabTimer();
+        if (!(Keyboard.getGesture(mAreas) instanceof SpaceAction))
+            return;
+
+        final Controller ctrl = controller;
+        mTabTimer = new CountDownTimer(Settings.longPressTime, Settings.longPressTime) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+            }
+
+
+            @Override
+            public void onFinish() {
+                mTabTriggered = true;
+                ctrl.fire(new VibrateAction(Settings.vibrateLevel));
+                ctrl.fire(new TabAction());
+            }
+        };
+        mTabTimer.start();
+    }
+
+
     /**
      * Override this to specify onDown behaviour
      *
@@ -126,6 +173,8 @@ public class TypingHandler extends AreaCrossedHandler {
         mRepeating = false;
         mNewlineTriggered = false;
         cancelNewlineTimer();
+        mTabTriggered = false;
+        cancelTabTimer();
         if (area != -1)
             mAreas.add(area);
         start(controller);
@@ -148,6 +197,7 @@ public class TypingHandler extends AreaCrossedHandler {
             return true;
         if (event.newArea != 3)
             cancelNewlineTimer();
+        cancelTabTimer();
         controller.fire(new VibrateAction(Settings.vibrateLevel));
         cancel();
         mAreas.add(event.newArea);
@@ -176,6 +226,8 @@ public class TypingHandler extends AreaCrossedHandler {
                 return true;
             }
         }
+
+        updateTabTimer(controller);
 
         //TODO: validate
         //no need to start long press for non-keys
@@ -240,12 +292,14 @@ public class TypingHandler extends AreaCrossedHandler {
     protected boolean onUp(Controller controller) {
         cancel();
         cancelNewlineTimer();
-        if (!mRepeating && !mNewlineTriggered) {
+        cancelTabTimer();
+        if (!mRepeating && !mNewlineTriggered && !mTabTriggered) {
             controller.fire(mKeyboard.getKey(mAreas));
         }
         mAreas.clear();
         mRepeating = false;
         mNewlineTriggered = false;
+        mTabTriggered = false;
         return false;
     }
 

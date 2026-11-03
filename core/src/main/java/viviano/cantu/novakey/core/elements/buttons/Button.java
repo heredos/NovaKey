@@ -26,6 +26,7 @@ import android.view.MotionEvent;
 
 import viviano.cantu.novakey.core.controller.Controller;
 import viviano.cantu.novakey.core.actions.Action;
+import viviano.cantu.novakey.core.actions.VibrateAction;
 import viviano.cantu.novakey.core.elements.Element;
 import viviano.cantu.novakey.core.model.MainDimensions;
 import viviano.cantu.novakey.core.model.Model;
@@ -156,6 +157,7 @@ public abstract class Button implements Element {
             @Override
             public void onFinish() {
                 mShouldClick = false;
+                control.fire(new VibrateAction(Settings.vibrateLevel));
                 Action a = onLongPressAction();
                 if (a != null)
                     control.fire(a);

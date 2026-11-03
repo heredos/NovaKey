@@ -29,6 +29,7 @@ import java.util.List;
 import viviano.cantu.novakey.core.controller.Controller;
 import viviano.cantu.novakey.core.actions.Action;
 import viviano.cantu.novakey.core.actions.SetOverlayAction;
+import viviano.cantu.novakey.core.actions.VibrateAction;
 import viviano.cantu.novakey.core.controller.touch.AreaCrossedHandler;
 import viviano.cantu.novakey.core.controller.touch.CrossEvent;
 import viviano.cantu.novakey.core.controller.touch.TouchHandler;
@@ -174,8 +175,10 @@ public class OnUpMenu implements OverlayElement, Menu {
                     if (mArea < 1 || mArea > mEntries.size())
                         return;
                     Menu.Entry entry = mEntries.get(mArea - 1);
-                    if (entry instanceof OnUpMenu.Entry)
+                    if (entry instanceof OnUpMenu.Entry) {
+                        control.fire(new VibrateAction(Settings.vibrateLevel));
                         control.fire(((OnUpMenu.Entry) entry).longPress);
+                    }
                 }
             }.start();
         }
