@@ -1,21 +1,29 @@
 # NovaKey
 > An alternative input method. 
 
-The intent of NovaKey is to create an open platform for alternative input methods.
-You are free to (and encouraged!) to contribute to this project with new languages, layouts, themes or whatever!
+This is a fork of the now defunct strellaStudios/Novaykey with a bunch of modernizations and fixes.  
+The goal here isn't to make the code pretty or anything, it is just a bunch of vibe-slopped patches to make this messy code usable again
+
+The intent of NovaKey was to create an open platform for alternative input methods, but the project fell though. I still consider it to be one of the most usable one-handed android keyboard ever made, and nothing I found ever came close.
+
+# Usage
+tap a sector to type the letter in the middle of it. swipe over a separator to type the letter on the edge of that separator.  
+swipe from the bottom to the top to capitalize, and from the top to the bottom to send. Swipe from the left to the right to add a space, and from the right to the left to delete a character.  
+if you need to insert a special character, keep pressing after the input and circle your finger around the center to select the character to add.  
+
+# Advanced usage
+rotate multiple sectors to move the cursor left and right, go back to the center to change which part of the selection to change. stay in the center then rotate to copy, cut or paste.  
+keep pressing after a down swipe to add a new line  keep pressing after an up swipe to start selecting/moving the cursor up and down (very handy for terminal users).  
+Keep pressing and rotate after a left swipe to delete multiple characters, and rotate in the opposite direction to add the characters back (if the input box supports it).  
+keep pressing after a right swipe to add a space (handy for terminal users).  
+swipe up with two fingers to configure the position and size of the keyboard.  
+I think that covers everything.
 
 # Contribute
-Everyone is encouraged to contribute to this project with ideas, code or designs
-### Developers
-If you would like to contribute to this project we ask you follow these simple steps:
-1. If there isn't one already, make sure to add a new issue describing what you want to work on. This is to make sure there is no overlap with other contributions.
-2. Once you have implemented your feature create a pull request referncing the issue number. 
-    e.g `[#002] Adds new French language layout`
-### Designers
-If you would like to contribute a design or an idea you can by submitting an issue to this repository labeled with `design request`. Or create a post in [our subreddit](https://www.reddit.com/r/NovaKey) tagged with [design request], someone will then create an issue in this repo to turn it into reality.
+You are free to do so, I am not sure I can handle this project as it should, if you are interested in fixing it by hand, you are welcome to contact me and i will gladly let you do so.
 
 ### Bugs
-If you would like to report a bug or crash you can by submitting an issue to this repository labeled with `bug`. Or create a post in [our subreddit](https://www.reddit.com/r/NovaKey) tagged with [bug], someone will then create an issue in this repo in order to fix it.
+If you would like to report a bug or crash you can by submitting an issue to this repository labeled with `bug`. I can't promise I'll be able to fix it but i'll do my best.
 
 # Architecture
 At a high level NovaKey uses the [Model-View-Controller(MVC)](https://en.wikipedia.org/wiki/Model%E2%80%93view%E2%80%93controller) pattern. Taking a closer look though the logic is centered around `Elements` and `Actions`. The diagram below shows the architecture with more detail:
