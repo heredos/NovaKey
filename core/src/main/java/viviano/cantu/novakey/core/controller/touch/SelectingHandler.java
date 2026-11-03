@@ -36,15 +36,24 @@ import viviano.cantu.novakey.core.model.Settings;
  */
 public class SelectingHandler extends RotatingHandler {
 
-    private final Action mRight, mLeft;
+    private final Action mClockwise, mCounterClockwise;
 
     private CountDownTimer mTimer;
     private boolean mMenuOpened;
 
 
     public SelectingHandler() {
-        mRight = new RenameSelectionAction(true);
-        mLeft = new RenameSelectionAction(false);
+        this(new RenameSelectionAction(true), new RenameSelectionAction(false));
+    }
+
+
+    /**
+     * @param clockwise        fired for every clockwise sector cross
+     * @param counterClockwise fired for every counter-clockwise sector cross
+     */
+    public SelectingHandler(Action clockwise, Action counterClockwise) {
+        mClockwise = clockwise;
+        mCounterClockwise = counterClockwise;
     }
 
 
@@ -120,7 +129,7 @@ public class SelectingHandler extends RotatingHandler {
                                Controller controller) {
         System.out.println("Rotating: " + clockwise);
         if (!inCenter)
-            controller.fire(clockwise ? mRight : mLeft);
+            controller.fire(clockwise ? mClockwise : mCounterClockwise);
         return true;
     }
 

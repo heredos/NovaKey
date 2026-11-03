@@ -29,15 +29,18 @@ import java.util.List;
 import viviano.cantu.novakey.core.controller.Controller;
 import viviano.cantu.novakey.core.actions.Action;
 import viviano.cantu.novakey.core.actions.RenameSelectionAction;
+import viviano.cantu.novakey.core.actions.RenameLineAction;
 import viviano.cantu.novakey.core.actions.SetOverlayAction;
 import viviano.cantu.novakey.core.actions.VibrateAction;
 import viviano.cantu.novakey.core.actions.input.DeleteAction;
 import viviano.cantu.novakey.core.actions.input.InputAction;
+import viviano.cantu.novakey.core.actions.input.ShiftAction;
 import viviano.cantu.novakey.core.actions.input.SpaceAction;
 import viviano.cantu.novakey.core.actions.input.TabAction;
 import viviano.cantu.novakey.core.elements.keyboards.Key;
 import viviano.cantu.novakey.core.elements.keyboards.Keyboard;
 import viviano.cantu.novakey.core.elements.keyboards.overlays.CursorOverlay;
+import viviano.cantu.novakey.core.elements.keyboards.overlays.LineCursorOverlay;
 import viviano.cantu.novakey.core.elements.keyboards.overlays.DeleteOverlay;
 import viviano.cantu.novakey.core.elements.keyboards.overlays.menus.InfiniteMenu;
 import viviano.cantu.novakey.core.model.Settings;
@@ -61,6 +64,8 @@ public class TypingHandler extends AreaCrossedHandler {
 
     private CountDownTimer mTabTimer;
     private boolean mTabTriggered = false;
+
+    private boolean mLineCursorArmed = false;
 
 
     public TypingHandler(Keyboard keyboard) {
@@ -95,6 +100,13 @@ public class TypingHandler extends AreaCrossedHandler {
                         //this long press' position instead of stale state
                         controller.setHandler(newMenu.getHandler());
                     }
+                } else if (a instanceof ShiftAction) {
+                    //center-cross hold: the swipe-up gesture completed and was
+                    //held for Settings.longPressTime, arming the line cursor.
+                    //Nothing is sent yet: the first rotation sends the step
+                    //(& overlay), releasing without rotating still shifts
+                    mLineCursorArmed = true;
+                    controller.fire(new VibrateAction(Settings.vibrateLevel));
                 }
             }
         };
@@ -175,6 +187,7 @@ public class TypingHandler extends AreaCrossedHandler {
         cancelNewlineTimer();
         mTabTriggered = false;
         cancelTabTimer();
+        mLineCursorArmed = false;
         if (area != -1)
             mAreas.add(area);
         start(controller);
@@ -233,6 +246,23 @@ public class TypingHandler extends AreaCrossedHandler {
         //no need to start long press for non-keys
         if (mAreas.size() <= 3 && !mRepeating)
             start(controller);
+
+        //first ring-to-ring rotation after a center-cross hold sends the
+        //initial line step(s) now, then hands the gesture to the overlay
+        //for the rest (mirrors the rotate gesture' entry below)
+        if (mLineCursorArmed) {
+            int delta = ringDelta(event.prevArea, event.newArea);
+            if (delta != 0) {
+                boolean clockwise = delta < 0;
+                for (int i = 0; i < Math.abs(delta); i++) {
+                    controller.fire(new VibrateAction(Settings.vibrateLevel));
+                    controller.fire(new RenameLineAction(clockwise));
+                }
+                controller.fire(new SetOverlayAction(new LineCursorOverlay()));
+                cancel();
+                return false;
+            }
+        }
 
         if (mRepeating && (event.newArea == mArea1 || event.newArea == mArea2)) {
             controller.fire(mRepeatingKey);
@@ -300,7 +330,30 @@ public class TypingHandler extends AreaCrossedHandler {
         mRepeating = false;
         mNewlineTriggered = false;
         mTabTriggered = false;
+        mLineCursorArmed = false;
         return false;
+    }
+
+
+    /**
+     * Signed step over the 5 sector cycle from prevArea to newArea,
+     * in [-2, 2]; 0 when either area is not on the ring (0 is the
+     * center, -1 is outside the board). Negative is clockwise, which
+     * matches {@link RotatingHandler}'s notion of clockwise
+     *
+     * @param prevArea area left by the finger
+     * @param newArea  area entered by the finger
+     * @return signed amount of sectors rotated, or 0 if not a ring cross
+     */
+    private static int ringDelta(int prevArea, int newArea) {
+        if (prevArea < 1 || prevArea > 5 || newArea < 1 || newArea > 5)
+            return 0;
+        int delta = newArea - prevArea;
+        if (delta > 2)
+            delta -= 5;
+        if (delta < -2)
+            delta += 5;
+        return delta;
     }
 
 
